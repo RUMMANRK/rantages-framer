@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<input type="file" id="uploadImage" accept="image/*">
+<canvas id="canvas" style="border:1px solid #000;"></canvas>
+<a id="downloadLink" style="display:none;">Download</a>
+
+<script>
+document.getElementById('uploadImage').addEventListener('change', function(e) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const masthead = new Image();
+            masthead.onload = function() {
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Adjust canvas size to match masthead width and dynamically calculated height
+                canvas.width = masthead.width;
+                canvas.height = masthead.height + img.height + 48; // Extra 48px for top and bottom margins
+
+                // Draw masthead
+                ctx.drawImage(masthead, 0, 0, masthead.width, masthead.height);
+
+                // Calculate content area dimensions
+                const contentX = 24; // margin left
+                const contentWidth = masthead.width - 24 - 60; // masthead width - marginLeft - marginRight
+                const contentY = masthead.height + 24; // masthead height + marginTop
+                const contentHeight = img.height; // initial height before adjustment
+                
+                // Draw rounded rectangle for content area
+                drawRoundedRect(ctx, contentX, contentY, contentWidth, contentHeight + 24, 20); // 20px corner radius
+                
+                // Draw the image inside the rounded rectangle
+                // Adjust image size and position if necessary
+                ctx.drawImage(img, contentX, contentY, contentWidth, contentHeight);
+
+                // Function to draw a rounded rectangle
+                function drawRoundedRect(ctx, x, y, width, height, radius) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + width - radius, y);
+                    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                    ctx.lineTo(x + width, y + height - radius);
+                    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                    ctx.lineTo(x + radius, y + height);
+                    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.closePath();
+                    ctx.clip(); // Clip to the rounded rectangle shape
+                }
+
+                // Prepare for download
+                document.getElementById('downloadLink').href = canvas.toDataURL('image/png');
+                document.getElementById('downloadLink').download = 'combined-image.png';
+                document.getElementById('downloadLink').style.display = 'block';
+            };
+            masthead.src = 'frames/masthead1.jpg'; // Path to the masthead
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+});
+
+document.getElementById('downloadLink').addEventListener('click', function() {
+    this.style.display = 'none';
+});
+</script>
+
+</body>
+</html>
